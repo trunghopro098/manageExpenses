@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, StyleSheet, TextInput, TouchableOpacity } from 'react-native'
+import { View, Text, SafeAreaView, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { windowH, windowW } from '../util/widthHeight'
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -8,12 +8,13 @@ export default function Historyspend() {
     const [data, setdata] = useState([])
     const [datatoday, setdatatoday] = useState(0)
     const [total, settotal] = useState(0)
+    const [show, setshow] = useState(true)
     const today = new Date()
     const datetime = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate()
     useEffect(() => {
         getlocal()
         getlocalCaculator()
-    }, [])
+    }, [show])
 
     const getlocal = async()=>{
        const data1 =  await AsyncStorage.getItem("DATA") 
@@ -21,6 +22,8 @@ export default function Historyspend() {
             const arr = JSON.parse(data1)
             const a = arr.reverse()
             setdata(a)
+        }else{
+            setdata([])
         }
     }
     const getlocalCaculator = async()=>{
@@ -49,12 +52,35 @@ export default function Historyspend() {
             
              setdatatoday(t)
              settotal(t1)
+         }else{
+            setdatatoday(0)
+            settotal(0)
          }
      }
 
     const currencyFormat = (num1) => {
         const num = +num1
         return '$' + num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+     }
+
+     const DeleteH = async()=>{
+        await AsyncStorage.removeItem("DATA")
+        alert("delete history success !") 
+        setshow(!show)
+     }
+
+     const handleDe = ()=>{
+        Alert.alert(
+            "Alert",
+            "Do you want delete history ?",
+            [
+              {
+                text: "Cancel",
+                style: "cancel"
+              },
+              { text: "OK", onPress: () => DeleteH() }
+            ]
+          );
      }
     
   return (
@@ -79,7 +105,29 @@ export default function Historyspend() {
                 <Text style={{ color: 'black',fontWeight:'bold', fontSize: 16, marginTop: 10}}>Total of all expenses : </Text>
                 <Text style={{ color: 'black', fontSize: 16, marginLeft: 10, marginTop: 10, marginBottom: 10}}>{currencyFormat(total)}</Text>
             </View>
+            {data.length > 0 &&
+                <View style={{
+                    width:"100%",
+                    flexDirection:'row',
+                    justifyContent:'center',
+                    alignItems:'center',
+                    
+                }}>
+                    <TouchableOpacity style={{
+                        height: 40,
+                        width: 125,
+                        backgroundColor:'tomato',
+                        flexDirection:'column',
+                        justifyContent:'center',
+                        alignItems:'center',
+                        borderRadius: 10
+                    }}  onPress={()=>handleDe()}>
+                        <Text style={{color: "white", fontWeight:'bold' }}>Delete history</Text>
+                    </TouchableOpacity>
+                </View>
+            }
         </View>
+        
       {data.length > 0 ? 
         <ScrollView style={styles.content}>
             {data.map((value)=>{
